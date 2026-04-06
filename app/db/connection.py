@@ -5,34 +5,31 @@ from contextlib import contextmanager
 from app.config.settings import settings
 
 try:
-    import pyodbc
+    import pymysql
 except ImportError as exc:  # pragma: no cover
     raise RuntimeError(
-        "pyodbc가 필요합니다. 다음 명령으로 의존성을 설치해 주세요: "
+        "pymysql이 필요합니다. 다음 명령으로 의존성을 설치해 주세요: "
         "python -m pip install -r requirements.txt"
     ) from exc
-
-
-def build_conn_str() -> str:
-    return (
-        f"DRIVER={{{settings.db_driver}}};"
-        f"SERVER={settings.db_host},{settings.db_port};"
-        f"DATABASE={settings.db_name};"
-        f"UID={settings.db_user};"
-        f"PWD={settings.db_password};"
-        f"Encrypt={settings.db_encrypt};"
-        "TrustServerCertificate=yes;"
-    )
 
 
 @contextmanager
 def get_connection():
     try:
-        conn = pyodbc.connect(build_conn_str(), autocommit=False)
-    except pyodbc.Error as exc:
+        conn = pymysql.connect(
+            host=settings.mysql_host,
+            port=settings.mysql_port,
+            user=settings.mysql_user,
+            password=settings.mysql_password,
+            database=settings.mysql_database,
+            charset="utf8mb4",
+            autocommit=False,
+            cursorclass=pymysql.cursors.DictCursor,
+        )
+    except pymysql.MySQLError as exc:
         raise RuntimeError(
-            "DB 연결에 실패했습니다. pyodbc 설치 여부와 ODBC Driver(예: ODBC Driver 18 for SQL Server) "
-            "설치를 확인해 주세요."
+            "MySQL 연결에 실패했습니다. CHATBOT_MYSQL_HOST/PORT/USER/PASSWORD/DATABASE "
+            "환경변수와 네트워크 접근 권한을 확인해 주세요."
         ) from exc
 
     try:
