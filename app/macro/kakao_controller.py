@@ -64,6 +64,7 @@ class KakaoController:
         return True
 
     def ensure_message_input(self) -> bool:
+        self._clear_search_box()
         pos = center_of_image(settings.message_input_image, timeout=5)
         if not pos:
             return False
@@ -76,6 +77,10 @@ class KakaoController:
     def send_message(self, message: str) -> bool:
         self._paste_text(message)
         pyautogui.press("enter")
+        time.sleep(0.2)
+        pyautogui.press("enter")
+        time.sleep(0.3)
+        pyautogui.press("esc")
         time.sleep(0.5)
         return True
 
