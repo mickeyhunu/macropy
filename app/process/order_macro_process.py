@@ -2,6 +2,11 @@ from __future__ import annotations
 
 import time
 
+try:
+    import msvcrt
+except ImportError:  # non-Windows 환경에서는 ESC 감지 비활성화
+    msvcrt = None
+
 from app.config.room_map import ROOM_IMAGE_MAP, TARGET_ROOM_NAME_MAP
 from app.config.settings import settings
 from app.core.logger import log
@@ -25,6 +30,7 @@ class OrderMacroProcess:
         self.target_room_image = ""
         self.message_text = ""
         self.fail_reason = ""
+        self.stop_requested = False
 
         self.kakao_wait_timer = ElapsedTimer(10.0)
         self.room_wait_timer = ElapsedTimer(8.0)
@@ -61,12 +67,38 @@ class OrderMacroProcess:
         self.done_wait_timer.reset()
         self.step = Step.CLAIM_JOB
 
+    def request_stop(self) -> None:
+        if self.stop_requested:
+            return
+        self.stop_requested = True
+        log("ESC 감지: 현재 작업 완료 후 종료합니다.")
+
+    def can_shutdown(self) -> bool:
+        return self.stop_requested and self.step == Step.CLAIM_JOB and self.job is None
+
+    def recover_to_ready(self, exc: Exception) -> None:
+        if not self.job:
+            self.step = Step.CLAIM_JOB
+            return
+
+        order_no = self.job["orderNo"]
+        reason = f"비정상 종료 복구: {exc}"
+        try:
+            self.service.mark_fail(order_no, reason)
+            log(f"예외 복구: orderNo={order_no} 상태를 READY로 롤백")
+        except Exception as rollback_exc:
+            log(f"예외 복구 실패: orderNo={order_no}, err={rollback_exc}")
+        finally:
+            self.cleanup()
+
     def run_once(self):
         if self.step != self.prev_step:
             log(f"[STEP] {self.step.name}")
             self.prev_step = self.step
 
         if self.step == Step.CLAIM_JOB:
+            if self.stop_requested:
+                return
             self.job = self.service.claim_job()
             if not self.job:
                 time.sleep(settings.poll_interval_sec)
@@ -166,11 +198,19 @@ def main():
     process = OrderMacroProcess()
     while True:
         try:
+            if msvcrt and msvcrt.kbhit():
+                key = msvcrt.getch()
+                if key == b"\x1b":
+                    process.request_stop()
+
             process.run_once()
+            if process.can_shutdown():
+                log("요청에 따라 정상 종료합니다.")
+                break
             time.sleep(0.1)
         except KeyboardInterrupt:
-            log("사용자 종료")
-            break
+            process.request_stop()
         except Exception as exc:
             log(f"메인 루프 예외: {exc}")
+            process.recover_to_ready(exc)
             time.sleep(1)
