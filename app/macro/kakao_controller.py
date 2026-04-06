@@ -28,18 +28,18 @@ KAKAO_PATHS = [
 ]
 
 # 카카오톡 UI 인식용 이미지
-CHAT_TAB_IMAGE = "chat_tab.png"              # 좌측 "채팅" 탭 이미지
-MESSAGE_INPUT_IMAGE = "message_input.png"    # 메시지 입력창 이미지
+CHAT_TAB_IMAGE = "assets/images/chat_tab.png"              # 좌측 "채팅" 탭 이미지
+MESSAGE_INPUT_IMAGE = "assets/images/message_input.png"    # 메시지 입력창 이미지
 
 # storeNo -> 해당 웨톡방 이미지 파일
 # - 방 검색 후 검색 결과에서 이 이미지를 찾아 더블클릭하여 진입
 ROOM_IMAGE_MAP = {
-    1: "room_dalto.png",
-    2: "room_elite.png",
-    3: "room_dessert.png",
-    4: "room_unme.png",
-    5: "room_dopamine.png",
-    6: "room_zeus.png",
+    1: "assets/images/room_wteam_hajun.png",
+    2: "assets/images/room_wteam_hajun.png",
+    3: "assets/images/room_wteam_hajun.png",
+    4: "assets/images/room_wteam_hajun.png",
+    5: "assets/images/room_wteam_hajun.png",
+    6: "assets/images/room_wteam_hajun.png",
 }
 
 # storeNo -> 카카오톡 검색용 방 이름
