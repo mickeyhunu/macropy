@@ -7,13 +7,11 @@ from pathlib import Path
 
 @dataclass(frozen=True)
 class Settings:
-    db_driver: str = os.getenv("DB_DRIVER", "ODBC Driver 18 for SQL Server")
-    db_host: str = os.getenv("DB_HOST", "localhost")
-    db_port: int = int(os.getenv("DB_PORT", "1433"))
-    db_name: str = os.getenv("DB_NAME", "master")
-    db_user: str = os.getenv("DB_USER", "sa")
-    db_password: str = os.getenv("DB_PASSWORD", "")
-    db_encrypt: str = os.getenv("DB_ENCRYPT", "no")
+    mysql_host: str = os.getenv("CHATBOT_MYSQL_HOST", os.getenv("DB_HOST", "localhost"))
+    mysql_port: int = int(os.getenv("CHATBOT_MYSQL_PORT", os.getenv("DB_PORT", "3306")))
+    mysql_user: str = os.getenv("CHATBOT_MYSQL_USER", os.getenv("DB_USER", "root"))
+    mysql_password: str = os.getenv("CHATBOT_MYSQL_PASSWORD", os.getenv("DB_PASSWORD", ""))
+    mysql_database: str = os.getenv("CHATBOT_MYSQL_DATABASE", os.getenv("DB_NAME", "chatBot_DB"))
 
     poll_interval_sec: float = float(os.getenv("POLL_INTERVAL_SEC", "1.5"))
 
