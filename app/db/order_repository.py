@@ -21,7 +21,8 @@ class OrderRepository:
         update_query = """
         UPDATE INFO_ORDER
            SET status = %s,
-               startedAt = NOW()
+               tryCount = tryCount + 1,
+               lastTriedAt = NOW()
          WHERE orderNo = %s
         """
         with get_connection() as conn:
@@ -45,9 +46,7 @@ class OrderRepository:
     def mark_done(self, order_no: int) -> None:
         query = """
         UPDATE INFO_ORDER
-           SET status = %s,
-               completedAt = NOW(),
-               failReason = NULL
+           SET status = %s
          WHERE orderNo = %s
         """
         with get_connection() as conn:
@@ -58,10 +57,9 @@ class OrderRepository:
         query = """
         UPDATE INFO_ORDER
            SET status = %s,
-               failReason = %s,
-               completedAt = NOW()
+               lastTriedAt = NOW()
          WHERE orderNo = %s
         """
         with get_connection() as conn:
-            conn.cursor().execute(query, (settings.status_fail, reason, order_no))
+            conn.cursor().execute(query, (settings.status_ready, order_no))
             conn.commit()
