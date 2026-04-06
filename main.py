@@ -1,4 +1,4 @@
-from app.macro.kakao_controller import main
+from app.process.order_macro_process import main
 
 
 if __name__ == "__main__":
