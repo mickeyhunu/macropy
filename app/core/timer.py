@@ -4,6 +4,8 @@ import time
 
 
 class ElapsedTimer:
+    """단순 timeout 판정을 위한 경과시간 타이머."""
+
     def __init__(self, timeout_sec: float):
         self.timeout_sec = timeout_sec
         self.started_at: float | None = None

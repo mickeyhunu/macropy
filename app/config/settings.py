@@ -6,6 +6,7 @@ from pathlib import Path
 
 
 def _load_env_file() -> None:
+    """프로젝트 루트(.env) 값을 읽어 process 환경변수에 기본 주입."""
     env_path = Path(__file__).resolve().parents[2] / ".env"
     if not env_path.exists():
         return
@@ -27,6 +28,8 @@ _load_env_file()
 
 @dataclass(frozen=True)
 class Settings:
+    """실행 시점 설정 집합(환경변수 기반)."""
+
     mysql_host: str = os.getenv("CHATBOT_MYSQL_HOST", os.getenv("DB_HOST", "localhost"))
     mysql_port: int = int(os.getenv("CHATBOT_MYSQL_PORT", os.getenv("DB_PORT", "3306")))
     mysql_user: str = os.getenv("CHATBOT_MYSQL_USER", os.getenv("DB_USER", "root"))

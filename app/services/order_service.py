@@ -4,6 +4,8 @@ from app.db.order_repository import OrderRepository
 
 
 class OrderService:
+    """프로세스 레이어와 저장소 레이어 사이의 얇은 서비스 계층."""
+
     def __init__(self, repo: OrderRepository | None = None):
         self.repo = repo or OrderRepository()
 
