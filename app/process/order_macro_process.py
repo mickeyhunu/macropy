@@ -7,7 +7,7 @@ try:
 except ImportError:  # non-Windows 환경에서는 ESC 감지 비활성화
     msvcrt = None
 
-from app.config.room_map import ROOM_IMAGE_MAP, TARGET_ROOM_NAME_MAP
+from app.config.room_map import TARGET_ROOM_NAME_MAP
 from app.config.settings import settings
 from app.core.logger import log
 from app.core.timer import ElapsedTimer
@@ -32,7 +32,6 @@ class OrderMacroProcess:
         # 현재 처리 중인 주문 컨텍스트.
         self.job = None
         self.target_room_name = ""
-        self.target_room_image = ""
         self.message_text = ""
         self.fail_reason = ""
         self.stop_requested = False
@@ -51,14 +50,10 @@ class OrderMacroProcess:
         """storeNo 기반 방 정보와 최종 발송 메시지를 만든다."""
         store_no = int(self.job["storeNo"])
         self.target_room_name = TARGET_ROOM_NAME_MAP.get(store_no, "")
-        self.target_room_image = ROOM_IMAGE_MAP.get(store_no, "")
         self.message_text = build_message(self.job)
 
         if not self.target_room_name:
             self.set_fail(f"storeNo 대상방 이름 없음: {store_no}")
-            return False
-        if not self.target_room_image:
-            self.set_fail(f"storeNo 대상방 이미지 없음: {store_no}")
             return False
         return True
 
@@ -66,7 +61,6 @@ class OrderMacroProcess:
         """한 건 처리 후 컨텍스트/타이머를 초기화하고 다음 주문 대기 상태로 복귀."""
         self.job = None
         self.target_room_name = ""
-        self.target_room_image = ""
         self.message_text = ""
         self.fail_reason = ""
         self.kakao_wait_timer.reset()
@@ -162,8 +156,8 @@ class OrderMacroProcess:
             return
 
         if self.step == Step.OPEN_ROOM:
-            # 7) 기준 이미지로 대상 방을 찾아 진입(재시도 + timeout).
-            if self.kakao.open_room_by_image(self.target_room_image):
+            # 7) 검색 결과에서 Enter로 방을 열고, 실제 진입 완료까지 대기한다.
+            if self.kakao.open_room_by_search_result():
                 self.step = Step.CHECK_INPUT
                 return
             if self.room_wait_timer.is_elapsed():
