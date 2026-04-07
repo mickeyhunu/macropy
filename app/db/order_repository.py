@@ -15,6 +15,7 @@ class OrderRepository:
         SELECT orderNo, storeNo, roomNo, sendMsg, waiterName
           FROM INFO_ORDER
          WHERE status = %s
+           AND COALESCE(tryCount, 0) < %s
          ORDER BY orderNo ASC
          LIMIT 1
          FOR UPDATE SKIP LOCKED
@@ -29,7 +30,7 @@ class OrderRepository:
         """
         with get_connection() as conn:
             cur = conn.cursor()
-            cur.execute(select_query, (settings.status_ready,))
+            cur.execute(select_query, (settings.status_ready, settings.max_try_count))
             row = cur.fetchone()
             if not row:
                 conn.rollback()
