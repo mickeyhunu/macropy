@@ -1,10 +1,10 @@
 ROOM_IMAGE_MAP = {
-    1: "assets/images/room_wteam_hajun.png",
-    2: "assets/images/room_wteam_hajun.png",
-    3: "assets/images/room_wteam_hajun.png",
-    4: "assets/images/room_wteam_hajun.png",
-    5: "assets/images/room_wteam_hajun.png",
-    6: "assets/images/room_wteam_hajun.png",
+    1: "assets/images/room_wteam_dalto.png",
+    2: "assets/images/room_wteam_elite.png",
+    3: "assets/images/room_wteam_dessert.png",
+    4: "assets/images/room_wteam_youandme.png",
+    5: "assets/images/room_wteam_dopamin.png",
+    6: "assets/images/room_wteam_jeus.png",
 }
 
 TARGET_ROOM_NAME_MAP = {
