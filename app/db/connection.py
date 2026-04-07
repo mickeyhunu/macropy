@@ -15,6 +15,10 @@ except ImportError as exc:  # pragma: no cover
 
 @contextmanager
 def get_connection():
+    """MySQL 커넥션 컨텍스트 매니저.
+
+    with 블록을 벗어나면 항상 연결을 닫는다.
+    """
     try:
         conn = pymysql.connect(
             host=settings.mysql_host,

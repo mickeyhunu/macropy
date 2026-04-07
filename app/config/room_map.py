@@ -1,3 +1,4 @@
+# storeNo -> 채팅방 식별 이미지 경로
 ROOM_IMAGE_MAP = {
     1: "assets/images/room_wteam_dalto.png",
     2: "assets/images/room_wteam_elite.png",
@@ -7,6 +8,7 @@ ROOM_IMAGE_MAP = {
     6: "assets/images/room_wteam_jeus.png",
 }
 
+# storeNo -> 검색용 채팅방 이름
 TARGET_ROOM_NAME_MAP = {
     1: "달토웨톡",
     2: "엘리트웨톡",

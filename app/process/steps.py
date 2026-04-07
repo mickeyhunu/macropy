@@ -2,6 +2,8 @@ from enum import Enum, auto
 
 
 class Step(Enum):
+    """주문 발송 상태 머신 단계."""
+
     CLAIM_JOB = auto()
     CHECK_KAKAO = auto()
     FOCUS_KAKAO = auto()
