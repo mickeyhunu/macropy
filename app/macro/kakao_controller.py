@@ -59,16 +59,20 @@ class KakaoController:
         time.sleep(1.0)
         return True
 
-    def open_room_by_image(self, room_image_path: str) -> bool:
-        # 목록에서 방 이름 이미지를 찾아 더블클릭(2회 클릭)으로 진입.
-        room_pos = center_of_image(room_image_path, timeout=4)
-        if not room_pos:
-            return False
-        pyautogui.click(room_pos.x, room_pos.y)
-        time.sleep(0.2)
-        pyautogui.click(room_pos.x, room_pos.y)
-        time.sleep(1.0)
+    def open_room_by_enter(self) -> bool:
+        # 검색 결과의 첫 번째 채팅방을 Enter로 연다.
+        pyautogui.press("enter")
+        time.sleep(0.5)
         return True
+
+    def is_room_opened(self) -> bool:
+        # 메시지 입력창 이미지로 채팅방 진입 여부를 판단한다.
+        return bool(center_of_image(settings.message_input_image, timeout=1.0))
+
+    def open_room_by_search_result(self) -> bool:
+        # Enter 입력 후 실제로 채팅방이 열렸는지 확인한다.
+        self.open_room_by_enter()
+        return self.is_room_opened()
 
     def ensure_message_input(self) -> bool:
         # 검색창 포커스가 남아있는 경우를 대비해 backspace로 정리 후
