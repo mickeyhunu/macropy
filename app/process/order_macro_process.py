@@ -44,6 +44,7 @@ class OrderMacroProcess:
 
     def set_fail(self, reason: str) -> None:
         self.fail_reason = reason
+        log(f"[오류] 단계={self.step.label}, 사유={reason}")
         self.step = Step.MARK_FAIL
 
     def prepare_job_data(self) -> bool:
@@ -53,7 +54,7 @@ class OrderMacroProcess:
         self.message_text = build_message(self.job)
 
         if not self.target_room_name:
-            self.set_fail(f"storeNo 대상방 이름 없음: {store_no}")
+            self.set_fail(f"storeNo={store_no}에 매핑된 대상 채팅방 이름이 없습니다.")
             return False
         return True
 
@@ -90,16 +91,16 @@ class OrderMacroProcess:
         reason = f"비정상 종료 복구: {exc}"
         try:
             self.service.mark_fail(order_no, reason)
-            log(f"예외 복구: orderNo={order_no} 상태를 READY로 롤백")
+            log(f"[복구] orderNo={order_no} 주문 상태를 READY로 롤백했습니다.")
         except Exception as rollback_exc:
-            log(f"예외 복구 실패: orderNo={order_no}, err={rollback_exc}")
+            log(f"[복구 오류] orderNo={order_no} 롤백 실패, 오류={rollback_exc}")
         finally:
             self.cleanup()
 
     def run_once(self):
         """상태 머신을 한 tick 실행한다."""
         if self.step != self.prev_step:
-            log(f"[STEP] {self.step.name}")
+            log(f"[단계 전환] {self.step.label} ({self.step.name})")
             self.prev_step = self.step
 
         if self.step == Step.CLAIM_JOB:
@@ -110,14 +111,14 @@ class OrderMacroProcess:
             if not self.job:
                 time.sleep(settings.poll_interval_sec)
                 return
-            log(f"작업 수신: orderNo={self.job['orderNo']}, roomNo={self.job['roomNo']}")
+            log(f"[작업 수신] orderNo={self.job['orderNo']}, roomNo={self.job['roomNo']}")
             self.step = Step.CHECK_KAKAO
             return
 
         if self.step == Step.CHECK_KAKAO:
             # 2) 카카오톡 프로세스가 없으면 실행한다.
             if not self.kakao.launch_if_needed():
-                self.set_fail("카카오톡 실행 실패")
+                self.set_fail("카카오톡 실행에 실패했습니다.")
                 return
             self.kakao_wait_timer.start()
             self.step = Step.FOCUS_KAKAO
@@ -129,7 +130,7 @@ class OrderMacroProcess:
                 self.step = Step.GO_CHAT_TAB
                 return
             if self.kakao_wait_timer.is_elapsed():
-                self.set_fail("카카오톡 창 활성화 timeout")
+                self.set_fail("카카오톡 창 활성화 대기 시간이 초과되었습니다.")
                 return
             time.sleep(0.5)
             return
@@ -137,7 +138,7 @@ class OrderMacroProcess:
         if self.step == Step.GO_CHAT_TAB:
             # 4) 채팅 탭으로 이동.
             if not self.kakao.go_to_chat_tab():
-                self.set_fail("채팅 탭 이동 실패")
+                self.set_fail("채팅 탭 이동에 실패했습니다.")
                 return
             self.step = Step.PREPARE_MESSAGE
             return
@@ -161,7 +162,7 @@ class OrderMacroProcess:
                 self.step = Step.CHECK_INPUT
                 return
             if self.room_wait_timer.is_elapsed():
-                self.set_fail(f"채팅방 열기 timeout: {self.target_room_name}")
+                self.set_fail(f"채팅방 열기 대기 시간이 초과되었습니다. 대상방={self.target_room_name}")
                 return
             time.sleep(0.4)
             return
@@ -174,7 +175,7 @@ class OrderMacroProcess:
             if not self.input_wait_timer.is_started():
                 self.input_wait_timer.start()
             if self.input_wait_timer.is_elapsed():
-                self.set_fail("입력창 탐색 timeout")
+                self.set_fail("메시지 입력창 탐색 대기 시간이 초과되었습니다.")
                 return
             time.sleep(0.3)
             return
@@ -185,17 +186,18 @@ class OrderMacroProcess:
                 self.step = Step.MARK_DONE
                 self.done_wait_timer.start()
             else:
-                self.set_fail("메시지 전송 실패")
+                self.set_fail("메시지 전송에 실패했습니다.")
             return
 
         if self.step == Step.MARK_DONE:
             # 10) DB 상태를 DONE으로 반영.
             try:
                 self.service.mark_done(self.job["orderNo"])
+                log(f"[완료] orderNo={self.job['orderNo']} 주문을 DONE으로 반영했습니다.")
                 self.step = Step.CLEANUP
             except Exception as exc:
                 if self.done_wait_timer.is_elapsed():
-                    self.set_fail(f"완료 처리 timeout: {exc}")
+                    self.set_fail(f"완료 처리 대기 시간이 초과되었습니다. 오류={exc}")
             return
 
         if self.step == Step.MARK_FAIL:
@@ -203,6 +205,10 @@ class OrderMacroProcess:
             try:
                 if self.job:
                     self.service.mark_fail(self.job["orderNo"], self.fail_reason)
+                    log(
+                        f"[실패 처리] orderNo={self.job['orderNo']} 주문을 READY로 롤백했습니다. "
+                        f"사유={self.fail_reason}"
+                    )
             finally:
                 self.step = Step.CLEANUP
             return
@@ -229,6 +235,6 @@ def main():
         except KeyboardInterrupt:
             process.request_stop()
         except Exception as exc:
-            log(f"메인 루프 예외: {exc}")
+            log(f"[메인 루프 오류] {exc}")
             process.recover_to_ready(exc)
             time.sleep(1)
