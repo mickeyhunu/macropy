@@ -129,7 +129,11 @@ class KakaoController:
         time.sleep(0.3)
         pyautogui.press("esc")
         time.sleep(0.5)
-        return True
+        # 전송 이후 검색창을 열어 검색어를 비우고 채팅 탭으로 복귀한다.
+        pyautogui.hotkey("ctrl", "f")
+        time.sleep(0.6)
+        self._clear_search_box()
+        return self.go_to_chat_tab()
 
     @staticmethod
     def _paste_text(text: str) -> None:
