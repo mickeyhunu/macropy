@@ -132,6 +132,9 @@ class OrderMacroProcess:
             if self.kakao_wait_timer.is_elapsed():
                 self.set_fail("카카오톡 창 활성화 대기 시간이 초과되었습니다.")
                 return
+            if self.kakao_wait_timer.is_started() and self.kakao_wait_timer.started_at is not None:
+                waited = time.time() - self.kakao_wait_timer.started_at
+                log(f"카카오톡 창 활성화 재시도 중... 경과={waited:.1f}s")
             time.sleep(0.5)
             return
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import subprocess
 import time
+from typing import Any
 
 import pyautogui
 import pyperclip
@@ -20,7 +21,7 @@ class KakaoController:
 
     def launch_if_needed(self) -> bool:
         # 이미 실행 중이면 재실행하지 않는다.
-        if pyautogui.getWindowsWithTitle("카카오톡"):
+        if self._find_kakao_windows():
             return True
 
         for path in settings.kakao_paths:
@@ -35,16 +36,48 @@ class KakaoController:
 
     def focus_window(self) -> bool:
         # 카카오톡 메인 창 활성화.
-        wins = pyautogui.getWindowsWithTitle("카카오톡")
+        wins = self._find_kakao_windows()
         if not wins:
+            visible_titles = [w.title for w in pyautogui.getAllWindows() if getattr(w, "title", "").strip()]
+            if visible_titles:
+                sample = ", ".join(visible_titles[:5])
+                log(f"현재 감지된 창 제목(샘플): {sample}")
+            log("카카오톡 창 탐색 실패: 전체 창 목록에서 카카오톡/카카오/KakaoTalk 제목을 찾지 못했습니다.")
             return False
 
         win = wins[0]
-        if win.isMinimized:
-            win.restore()
-        win.activate()
-        time.sleep(0.7)
-        return True
+        try:
+            if win.isMinimized:
+                win.restore()
+                time.sleep(0.2)
+            win.activate()
+            time.sleep(0.7)
+            return True
+        except Exception as exc:
+            log(f"카카오톡 창 활성화 실패: {exc}")
+            return False
+
+    @staticmethod
+    def _find_kakao_windows() -> list[Any]:
+        """카카오톡 창 제목 변형(국문/영문/공백 포함)을 허용해 후보를 찾는다."""
+        # 1) pyautogui의 제목 포함 검색(빠른 경로)
+        wins: list[Any] = []
+        for keyword in ("카카오톡", "카카오", "KakaoTalk", "Kakao"):
+            wins.extend(pyautogui.getWindowsWithTitle(keyword))
+
+        if wins:
+            return wins
+
+        # 2) getAllWindows()로 제목 변형까지 보수적으로 탐색
+        candidates: list[Any] = []
+        for win in pyautogui.getAllWindows():
+            title = (getattr(win, "title", "") or "").strip().lower()
+            if not title:
+                continue
+            normalized = title.replace(" ", "")
+            if any(token in normalized for token in ("카카오톡", "카카오", "kakaotalk", "kakao")):
+                candidates.append(win)
+        return candidates
 
     def go_to_chat_tab(self) -> bool:
         # 탭 전환은 이미지 매칭으로 수행한다.
