@@ -52,7 +52,9 @@ class Settings:
     kakao_paths: tuple[str, ...] = (
         os.getenv("KAKAO_PATH_1", r"D:\KakaoTalk\KakaoTalk.exe"),
         os.getenv("KAKAO_PATH_2", r"C:\Program Files\Kakao\KakaoTalk.exe"),
-        os.getenv("KAKAO_PATH_3", str(Path.home() / "AppData/Local/Kakao/KakaoTalk/KakaoTalk.exe")),
+        os.getenv("KAKAO_PATH_3", r"C:\Program Files (x86)\Kakao\KakaoTalk.exe"),
+        os.getenv("KAKAO_PATH_3", r"C:\Program Files (x86)\Kakao\KakaoTalk\KakaoTalk.exe"),
+        os.getenv("KAKAO_PATH_4", str(Path.home() / "AppData/Local/Kakao/KakaoTalk/KakaoTalk.exe")),
     )
 
 
