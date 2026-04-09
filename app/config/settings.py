@@ -48,13 +48,16 @@ class Settings:
     message_input_image: str = os.getenv("MESSAGE_INPUT_IMAGE", "assets/images/message_input.png")
 
     image_confidence: float = float(os.getenv("IMAGE_CONFIDENCE", "0.82"))
+    kakao_focus_retry_interval_sec: float = float(os.getenv("KAKAO_FOCUS_RETRY_INTERVAL_SEC", "0.5"))
+    kakao_recovery_click_x: int = int(os.getenv("KAKAO_RECOVERY_CLICK_X", "-1"))
+    kakao_recovery_click_y: int = int(os.getenv("KAKAO_RECOVERY_CLICK_Y", "-1"))
 
     kakao_paths: tuple[str, ...] = (
         os.getenv("KAKAO_PATH_1", r"D:\KakaoTalk\KakaoTalk.exe"),
         os.getenv("KAKAO_PATH_2", r"C:\Program Files\Kakao\KakaoTalk.exe"),
         os.getenv("KAKAO_PATH_3", r"C:\Program Files (x86)\Kakao\KakaoTalk.exe"),
-        os.getenv("KAKAO_PATH_3", r"C:\Program Files (x86)\Kakao\KakaoTalk\KakaoTalk.exe"),
-        os.getenv("KAKAO_PATH_4", str(Path.home() / "AppData/Local/Kakao/KakaoTalk/KakaoTalk.exe")),
+        os.getenv("KAKAO_PATH_4", r"C:\Program Files (x86)\Kakao\KakaoTalk\KakaoTalk.exe"),
+        os.getenv("KAKAO_PATH_5", str(Path.home() / "AppData/Local/Kakao/KakaoTalk/KakaoTalk.exe")),
     )
 
 
