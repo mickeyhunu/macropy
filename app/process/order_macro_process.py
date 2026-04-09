@@ -35,9 +35,10 @@ class OrderMacroProcess:
         self.message_text = ""
         self.fail_reason = ""
         self.stop_requested = False
+        self.focus_recover_attempted = False
 
         # UI 자동화는 실패/지연이 잦아 단계별 timeout 타이머를 분리해 둔다.
-        self.kakao_wait_timer = ElapsedTimer(10.0)
+        self.kakao_wait_timer = ElapsedTimer(20.0)
         self.room_wait_timer = ElapsedTimer(8.0)
         self.input_wait_timer = ElapsedTimer(5.0)
         self.done_wait_timer = ElapsedTimer(3.0)
@@ -68,6 +69,7 @@ class OrderMacroProcess:
         self.room_wait_timer.reset()
         self.input_wait_timer.reset()
         self.done_wait_timer.reset()
+        self.focus_recover_attempted = False
         self.step = Step.CLAIM_JOB
 
     def request_stop(self) -> None:
@@ -120,6 +122,7 @@ class OrderMacroProcess:
             if not self.kakao.launch_if_needed():
                 self.set_fail("카카오톡 실행에 실패했습니다.")
                 return
+            self.focus_recover_attempted = False
             self.kakao_wait_timer.start()
             self.step = Step.FOCUS_KAKAO
             return
@@ -130,6 +133,14 @@ class OrderMacroProcess:
                 self.step = Step.GO_CHAT_TAB
                 return
             if self.kakao_wait_timer.is_elapsed():
+                if not self.focus_recover_attempted:
+                    self.focus_recover_attempted = True
+                    log("카카오톡 창 활성화 1차 대기 초과: 카카오톡 재실행/재탐색을 1회 시도합니다.")
+                    if self.kakao.launch_if_needed():
+                        self.kakao_wait_timer.reset()
+                        self.kakao_wait_timer.start()
+                        time.sleep(1.0)
+                        return
                 self.set_fail("카카오톡 창 활성화 대기 시간이 초과되었습니다.")
                 return
             if self.kakao_wait_timer.is_started() and self.kakao_wait_timer.started_at is not None:
