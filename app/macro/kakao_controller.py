@@ -38,8 +38,8 @@ class KakaoController:
         # 카카오톡 메인 창 활성화.
         wins = self._find_kakao_windows()
         if not wins:
-            self._click_left_middle_for_recovery()
-            time.sleep(0.3)
+            self._click_recovery_point()
+            time.sleep(0.4)
             wins = self._find_kakao_windows()
 
         if not wins:
@@ -59,7 +59,26 @@ class KakaoController:
             time.sleep(0.7)
             return True
         except Exception as exc:
-            log(f"카카오톡 창 활성화 실패: {exc}")
+            log(f"카카오톡 창 활성화 실패: {exc} (복구 클릭 후 재시도)")
+            self._click_recovery_point()
+            time.sleep(0.4)
+            return self._retry_activate_first_window()
+
+    def _retry_activate_first_window(self) -> bool:
+        wins = self._find_kakao_windows()
+        if not wins:
+            return False
+
+        win = wins[0]
+        try:
+            if win.isMinimized:
+                win.restore()
+                time.sleep(0.2)
+            win.activate()
+            time.sleep(0.7)
+            return True
+        except Exception as exc:
+            log(f"카카오톡 창 활성화 재시도 실패: {exc}")
             return False
 
     @staticmethod
@@ -156,11 +175,20 @@ class KakaoController:
             time.sleep(0.02)
 
     @staticmethod
-    def _click_left_middle_for_recovery() -> None:
-        # 창 목록에서 카카오톡을 찾지 못하는 경우, 좌측 중앙을 클릭해
-        # 포커스를 정리하는 복구 동작.
-        _, height = pyautogui.size()
-        target_x = 20
-        target_y = max(1, height // 2)
+    def _click_recovery_point() -> None:
+        # env에 좌표가 있으면 우선 사용하고, 없으면 기본 좌측 중앙으로 복구 클릭한다.
+        width, height = pyautogui.size()
+        configured_x = settings.kakao_recovery_click_x
+        configured_y = settings.kakao_recovery_click_y
+
+        if configured_x >= 0 and configured_y >= 0:
+            target_x = min(max(1, configured_x), max(1, width - 1))
+            target_y = min(max(1, configured_y), max(1, height - 1))
+            source = "env"
+        else:
+            target_x = 20
+            target_y = max(1, height // 2)
+            source = "default"
+
         pyautogui.click(target_x, target_y)
-        log(f"카카오톡 창 탐색 복구 클릭 수행: x={target_x}, y={target_y}")
+        log(f"카카오톡 창 탐색 복구 클릭 수행({source}): x={target_x}, y={target_y}, 화면={width}x{height}")
