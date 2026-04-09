@@ -38,6 +38,11 @@ class KakaoController:
         # 카카오톡 메인 창 활성화.
         wins = self._find_kakao_windows()
         if not wins:
+            self._click_left_middle_for_recovery()
+            time.sleep(0.3)
+            wins = self._find_kakao_windows()
+
+        if not wins:
             visible_titles = [w.title for w in pyautogui.getAllWindows() if getattr(w, "title", "").strip()]
             if visible_titles:
                 sample = ", ".join(visible_titles[:5])
@@ -149,3 +154,13 @@ class KakaoController:
         for _ in range(20):
             pyautogui.press("backspace")
             time.sleep(0.02)
+
+    @staticmethod
+    def _click_left_middle_for_recovery() -> None:
+        # 창 목록에서 카카오톡을 찾지 못하는 경우, 좌측 중앙을 클릭해
+        # 포커스를 정리하는 복구 동작.
+        _, height = pyautogui.size()
+        target_x = 20
+        target_y = max(1, height // 2)
+        pyautogui.click(target_x, target_y)
+        log(f"카카오톡 창 탐색 복구 클릭 수행: x={target_x}, y={target_y}")
