@@ -7,10 +7,13 @@ from typing import Any
 
 import pyautogui
 import pyperclip
+import win32api
+import win32con
+import win32gui
 
 from app.config.settings import settings
 from app.core.logger import log
-from app.macro.image_locator import center_of_image, click_image
+from app.macro.image_locator import click_image
 
 pyautogui.FAILSAFE = True
 pyautogui.PAUSE = 0.2
@@ -108,23 +111,46 @@ class KakaoController:
         return click_image(settings.chat_tab_image, timeout=5)
 
     def search_room(self, room_name: str) -> bool:
-        # Ctrl+F 검색창을 열고 대상 채팅방 이름을 입력한다.
-        pyautogui.hotkey("ctrl", "f")
-        time.sleep(0.6)
-        self._clear_search_box()
-        self._paste_text(room_name)
+        # 검색창 핸들을 직접 찾아 대상 채팅방 이름을 입력한다.
+        hwnd_kakao = win32gui.FindWindow(None, "카카오톡")
+        if not hwnd_kakao:
+            return False
+
+        hwnd1 = win32gui.FindWindowEx(hwnd_kakao, None, "EVA_ChildWindow", None)
+        hwnd2 = win32gui.FindWindowEx(hwnd1, None, "EVA_Window", None)
+        hwnd3 = win32gui.FindWindowEx(hwnd1, hwnd2, "EVA_Window", None)
+        hwnd_edit = win32gui.FindWindowEx(hwnd3, None, "Edit", None)
+        if not hwnd_edit:
+            return False
+
+        win32api.SendMessage(hwnd_edit, win32con.WM_SETTEXT, 0, room_name)
         time.sleep(1.0)
         return True
 
     def open_room_by_enter(self) -> bool:
         # 검색 결과의 첫 번째 채팅방을 Enter로 연다.
-        pyautogui.press("enter")
-        time.sleep(0.5)
+        hwnd_kakao = win32gui.FindWindow(None, "카카오톡")
+        if not hwnd_kakao:
+            return False
+
+        hwnd1 = win32gui.FindWindowEx(hwnd_kakao, None, "EVA_ChildWindow", None)
+        hwnd2 = win32gui.FindWindowEx(hwnd1, None, "EVA_Window", None)
+        hwnd3 = win32gui.FindWindowEx(hwnd1, hwnd2, "EVA_Window", None)
+        hwnd_edit = win32gui.FindWindowEx(hwnd3, None, "Edit", None)
+        if not hwnd_edit:
+            return False
+
+        self._send_enter(hwnd_edit)
+        time.sleep(1.0)
         return True
 
     def is_room_opened(self) -> bool:
-        # 메시지 입력창 이미지로 채팅방 진입 여부를 판단한다.
-        return bool(center_of_image(settings.message_input_image, timeout=1.0))
+        # 포그라운드 창의 메시지 입력창 핸들로 채팅방 진입 여부를 판단한다.
+        hwnd_main = win32gui.GetForegroundWindow()
+        if not hwnd_main:
+            return False
+        hwnd_edit = win32gui.FindWindowEx(hwnd_main, None, "RICHEDIT50W", None)
+        return bool(hwnd_edit)
 
     def open_room_by_search_result(self) -> bool:
         # Enter 입력 후 실제로 채팅방이 열렸는지 확인한다.
@@ -132,32 +158,32 @@ class KakaoController:
         return self.is_room_opened()
 
     def ensure_message_input(self) -> bool:
-        # 검색창 포커스가 남아있는 경우를 대비해 backspace로 정리 후
-        # 입력창 이미지를 찾아 클릭한다.
-        self._clear_search_box()
-        pos = center_of_image(settings.message_input_image, timeout=5)
-        if not pos:
+        # 포그라운드 창의 메시지 입력창 핸들 존재 여부를 확인한다.
+        hwnd_main = win32gui.GetForegroundWindow()
+        if not hwnd_main:
             return False
-        pyautogui.click(pos.x + 80, pos.y + 10)
-        time.sleep(0.2)
-        pyautogui.click(pos.x + 80, pos.y + 10)
-        time.sleep(0.3)
-        return True
+        hwnd_edit = win32gui.FindWindowEx(hwnd_main, None, "RICHEDIT50W", None)
+        return bool(hwnd_edit)
 
     def send_message(self, message: str) -> bool:
-        # 붙여넣기 후 Enter 2회로 전송 안정성을 높인다.
+        # 활성화된 채팅방의 메시지 입력창 핸들을 찾아 붙여넣기/Enter로 전송한다.
+        hwnd_main = win32gui.GetForegroundWindow()
+        if not hwnd_main:
+            return False
+
+        hwnd_edit = win32gui.FindWindowEx(hwnd_main, None, "RICHEDIT50W", None)
+        if not hwnd_edit:
+            return False
+
+        win32gui.SetForegroundWindow(hwnd_main)
+        time.sleep(0.1)
+        win32gui.SetFocus(hwnd_edit)
+        time.sleep(0.1)
+
         self._paste_text(message)
-        pyautogui.press("enter")
-        time.sleep(0.2)
-        pyautogui.press("enter")
+        self._send_enter(hwnd_edit)
         time.sleep(0.3)
-        pyautogui.press("esc")
-        time.sleep(0.5)
-        # 전송 이후 검색창을 열어 검색어를 비우고 채팅 탭으로 복귀한다.
-        pyautogui.hotkey("ctrl", "f")
-        time.sleep(0.6)
-        self._clear_search_box()
-        return self.go_to_chat_tab()
+        return True
 
     @staticmethod
     def _paste_text(text: str) -> None:
@@ -173,6 +199,12 @@ class KakaoController:
         for _ in range(20):
             pyautogui.press("backspace")
             time.sleep(0.02)
+
+    @staticmethod
+    def _send_enter(hwnd: int) -> None:
+        win32api.PostMessage(hwnd, win32con.WM_KEYDOWN, win32con.VK_RETURN, 0)
+        time.sleep(0.01)
+        win32api.PostMessage(hwnd, win32con.WM_KEYUP, win32con.VK_RETURN, 0)
 
     @staticmethod
     def _click_recovery_point() -> None:
