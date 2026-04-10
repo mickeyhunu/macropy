@@ -185,7 +185,15 @@ class KakaoController:
         
         time.sleep(0.3)
         self._send_enter(hwnd_edit)
+        time.sleep(0.2)
+        self._close_room_and_clear_search()
         return True
+
+    def _close_room_and_clear_search(self) -> None:
+        # 전송 직후 ESC로 채팅방을 닫고, 검색창 값을 비워 다음 작업에 영향이 없도록 한다.
+        pyautogui.press("esc")
+        time.sleep(0.2)
+        self._set_search_text("")
 
     @staticmethod
     def _paste_text(text: str) -> None:
@@ -201,6 +209,22 @@ class KakaoController:
         for _ in range(20):
             pyautogui.press("backspace")
             time.sleep(0.02)
+
+    @staticmethod
+    def _set_search_text(text: str) -> bool:
+        hwnd_kakao = win32gui.FindWindow(None, "카카오톡")
+        if not hwnd_kakao:
+            return False
+
+        hwnd1 = win32gui.FindWindowEx(hwnd_kakao, None, "EVA_ChildWindow", None)
+        hwnd2 = win32gui.FindWindowEx(hwnd1, None, "EVA_Window", None)
+        hwnd3 = win32gui.FindWindowEx(hwnd1, hwnd2, "EVA_Window", None)
+        hwnd_edit = win32gui.FindWindowEx(hwnd3, None, "Edit", None)
+        if not hwnd_edit:
+            return False
+
+        win32api.SendMessage(hwnd_edit, win32con.WM_SETTEXT, 0, text)
+        return True
 
     @staticmethod
     def _send_enter(hwnd: int) -> None:
