@@ -38,7 +38,7 @@ class OrderMacroProcess:
         self.focus_recover_attempted = False
 
         # UI 자동화는 실패/지연이 잦아 단계별 timeout 타이머를 분리해 둔다.
-        self.kakao_wait_timer = ElapsedTimer(20.0)
+        self.kakao_wait_timer = ElapsedTimer(10.0)
         self.room_wait_timer = ElapsedTimer(8.0)
         self.input_wait_timer = ElapsedTimer(5.0)
         self.done_wait_timer = ElapsedTimer(3.0)
