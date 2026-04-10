@@ -2,3 +2,4 @@ requests
 pyautogui
 pyperclip
 pymysql
+pywin32
