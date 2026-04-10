@@ -7,7 +7,6 @@ class Step(Enum):
     CLAIM_JOB = auto()
     CHECK_KAKAO = auto()
     FOCUS_KAKAO = auto()
-    GO_CHAT_TAB = auto()
     PREPARE_MESSAGE = auto()
     SEARCH_ROOM = auto()
     OPEN_ROOM = auto()
@@ -24,7 +23,6 @@ class Step(Enum):
             Step.CLAIM_JOB: "주문 선점",
             Step.CHECK_KAKAO: "카카오톡 실행 확인",
             Step.FOCUS_KAKAO: "카카오톡 창 활성화",
-            Step.GO_CHAT_TAB: "채팅 탭 이동",
             Step.PREPARE_MESSAGE: "발송 데이터 준비",
             Step.SEARCH_ROOM: "채팅방 검색",
             Step.OPEN_ROOM: "채팅방 열기",

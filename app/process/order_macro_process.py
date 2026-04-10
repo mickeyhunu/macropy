@@ -149,29 +149,21 @@ class OrderMacroProcess:
             time.sleep(settings.kakao_focus_retry_interval_sec)
             return
 
-        if self.step == Step.GO_CHAT_TAB:
-            # 4) 채팅 탭으로 이동.
-            if not self.kakao.go_to_chat_tab():
-                self.set_fail("채팅 탭 이동에 실패했습니다.")
-                return
-            self.step = Step.PREPARE_MESSAGE
-            return
-
         if self.step == Step.PREPARE_MESSAGE:
-            # 5) room 이미지/이름 매핑과 메시지 본문을 준비한다.
+            # 4) room 이름 매핑과 메시지 본문을 준비한다.
             if self.prepare_job_data():
                 self.step = Step.SEARCH_ROOM
             return
 
         if self.step == Step.SEARCH_ROOM:
-            # 6) 채팅방 검색창에 대상 방 이름 입력.
+            # 5) 채팅방 검색창에 대상 방 이름 입력.
             self.kakao.search_room(self.target_room_name)
             self.room_wait_timer.start()
             self.step = Step.OPEN_ROOM
             return
 
         if self.step == Step.OPEN_ROOM:
-            # 7) 검색 결과에서 Enter로 방을 열고, 실제 진입 완료까지 대기한다.
+            # 6) 검색 결과에서 Enter로 방을 열고, 실제 진입 완료까지 대기한다.
             if self.kakao.open_room_by_search_result():
                 self.step = Step.CHECK_INPUT
                 return
@@ -182,7 +174,7 @@ class OrderMacroProcess:
             return
 
         if self.step == Step.CHECK_INPUT:
-            # 8) 메시지 입력창이 보일 때까지 확인.
+            # 7) 메시지 입력창이 보일 때까지 확인.
             if self.kakao.ensure_message_input():
                 self.step = Step.SEND_MESSAGE
                 return
@@ -195,7 +187,7 @@ class OrderMacroProcess:
             return
 
         if self.step == Step.SEND_MESSAGE:
-            # 9) 메시지 붙여넣기 + Enter 전송.
+            # 8) 메시지 붙여넣기 + Enter 전송.
             if self.kakao.send_message(self.message_text):
                 self.step = Step.MARK_DONE
                 self.done_wait_timer.start()
@@ -204,7 +196,7 @@ class OrderMacroProcess:
             return
 
         if self.step == Step.MARK_DONE:
-            # 10) DB 상태를 DONE으로 반영.
+            # 9) DB 상태를 DONE으로 반영.
             try:
                 self.service.mark_done(self.job["orderNo"])
                 log(f"[완료] orderNo={self.job['orderNo']} 주문을 DONE으로 반영했습니다.")
