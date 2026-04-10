@@ -13,7 +13,6 @@ import win32gui
 
 from app.config.settings import settings
 from app.core.logger import log
-from app.macro.image_locator import click_image
 
 pyautogui.FAILSAFE = True
 pyautogui.PAUSE = 0.2
@@ -105,10 +104,6 @@ class KakaoController:
             if any(token in normalized for token in ("카카오톡", "카카오", "kakaotalk", "kakao")):
                 candidates.append(win)
         return candidates
-
-    def go_to_chat_tab(self) -> bool:
-        # 탭 전환은 이미지 매칭으로 수행한다.
-        return click_image(settings.chat_tab_image, timeout=5)
 
     def search_room(self, room_name: str) -> bool:
         # 검색창 핸들을 직접 찾아 대상 채팅방 이름을 입력한다.

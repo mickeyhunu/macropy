@@ -44,10 +44,6 @@ class Settings:
     status_done: str = os.getenv("STATUS_DONE", "DONE")
     status_fail: str = os.getenv("STATUS_FAIL", "FAIL")
 
-    chat_tab_image: str = os.getenv("CHAT_TAB_IMAGE", "assets/images/chat_tab.png")
-    message_input_image: str = os.getenv("MESSAGE_INPUT_IMAGE", "assets/images/message_input.png")
-
-    image_confidence: float = float(os.getenv("IMAGE_CONFIDENCE", "0.82"))
     kakao_focus_retry_interval_sec: float = float(os.getenv("KAKAO_FOCUS_RETRY_INTERVAL_SEC", "0.5"))
     kakao_recovery_click_x: int = int(os.getenv("KAKAO_RECOVERY_CLICK_X", "-1"))
     kakao_recovery_click_y: int = int(os.getenv("KAKAO_RECOVERY_CLICK_Y", "-1"))
