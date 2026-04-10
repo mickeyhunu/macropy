@@ -130,7 +130,7 @@ class OrderMacroProcess:
         if self.step == Step.FOCUS_KAKAO:
             # 3) 카카오톡 창이 포커스될 때까지 짧게 재시도한다.
             if self.kakao.focus_window():
-                self.step = Step.GO_CHAT_TAB
+                self.step = Step.PREPARE_MESSAGE
                 return
             if self.kakao_wait_timer.is_elapsed():
                 if not self.focus_recover_attempted:

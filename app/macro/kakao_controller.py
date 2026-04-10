@@ -175,14 +175,16 @@ class KakaoController:
         if not hwnd_edit:
             return False
 
-        win32gui.SetForegroundWindow(hwnd_main)
-        time.sleep(0.1)
-        win32gui.SetFocus(hwnd_edit)
-        time.sleep(0.1)
+        # win32gui.SetForegroundWindow(hwnd_main)
+        # time.sleep(0.1)
+        # win32gui.SetFocus(hwnd_edit)
+        # time.sleep(0.1)
 
         self._paste_text(message)
         self._send_enter(hwnd_edit)
+        
         time.sleep(0.3)
+        self._send_enter(hwnd_edit)
         return True
 
     @staticmethod
