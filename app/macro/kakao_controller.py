@@ -192,8 +192,6 @@ class KakaoController:
 
     def reset_room_search(self) -> bool:
         # 채팅방 열기 실패 복구를 위해 검색창 상태를 초기화한다.
-        pyautogui.press("esc")
-        time.sleep(0.2)
         return self._set_search_text("")
 
     @staticmethod
