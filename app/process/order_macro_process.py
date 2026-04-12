@@ -36,6 +36,7 @@ class OrderMacroProcess:
         self.fail_reason = ""
         self.stop_requested = False
         self.focus_recover_attempted = False
+        self.room_open_retry_count = 0
 
         # UI 자동화는 실패/지연이 잦아 단계별 timeout 타이머를 분리해 둔다.
         self.kakao_wait_timer = ElapsedTimer(10.0)
@@ -70,6 +71,7 @@ class OrderMacroProcess:
         self.input_wait_timer.reset()
         self.done_wait_timer.reset()
         self.focus_recover_attempted = False
+        self.room_open_retry_count = 0
         self.step = Step.CLAIM_JOB
 
     def request_stop(self) -> None:
@@ -165,10 +167,25 @@ class OrderMacroProcess:
         if self.step == Step.OPEN_ROOM:
             # 6) 검색 결과에서 Enter로 방을 열고, 실제 진입 완료까지 대기한다.
             if self.kakao.open_room_by_search_result():
+                self.room_open_retry_count = 0
                 self.step = Step.CHECK_INPUT
                 return
             if self.room_wait_timer.is_elapsed():
-                self.set_fail(f"채팅방 열기 대기 시간이 초과되었습니다. 대상방={self.target_room_name}")
+                self.room_open_retry_count += 1
+                if self.room_open_retry_count <= 2:
+                    log(
+                        "채팅방 열기 대기 시간 초과 감지: 검색창을 초기화한 뒤 "
+                        f"채팅방 검색을 재시도합니다. 대상방={self.target_room_name}, "
+                        f"재시도={self.room_open_retry_count}/2"
+                    )
+                    self.kakao.reset_room_search()
+                    self.room_wait_timer.reset()
+                    self.step = Step.SEARCH_ROOM
+                    return
+                self.set_fail(
+                    "채팅방 열기 대기 시간이 반복적으로 초과되었습니다. "
+                    f"대상방={self.target_room_name}, 재시도={self.room_open_retry_count}"
+                )
                 return
             time.sleep(0.4)
             return
