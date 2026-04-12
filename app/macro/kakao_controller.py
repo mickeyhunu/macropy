@@ -190,6 +190,12 @@ class KakaoController:
         time.sleep(0.2)
         self._set_search_text("")
 
+    def reset_room_search(self) -> bool:
+        # 채팅방 열기 실패 복구를 위해 검색창 상태를 초기화한다.
+        pyautogui.press("esc")
+        time.sleep(0.2)
+        return self._set_search_text("")
+
     @staticmethod
     def _paste_text(text: str) -> None:
         # 한글 입력 안정성을 위해 키 타이핑 대신 클립보드 붙여넣기를 사용.
