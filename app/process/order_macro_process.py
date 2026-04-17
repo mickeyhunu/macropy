@@ -173,12 +173,15 @@ class OrderMacroProcess:
             if self.room_wait_timer.is_elapsed():
                 self.room_open_retry_count += 1
                 if self.room_open_retry_count <= 2:
+                    reset_ok = self.kakao.reset_room_search()
                     log(
-                        "채팅방 열기 대기 시간 초과 감지: 검색창을 초기화한 뒤 "
+                        "채팅방 열기 대기 시간 초과 감지: Ctrl+F 이후 Delete/Backspace 반복으로 검색창을 비운 뒤 "
                         f"채팅방 검색을 재시도합니다. 대상방={self.target_room_name}, "
-                        f"재시도={self.room_open_retry_count}/2"
+                        f"재시도={self.room_open_retry_count}/2, 초기화성공={reset_ok}"
                     )
-                    self.kakao.reset_room_search()
+                    if not reset_ok:
+                        log("검색창 수동 초기화가 실패해 WM_SETTEXT 방식 초기화를 추가로 시도합니다.")
+                        self.kakao.force_reset_room_search()
                     self.room_wait_timer.reset()
                     self.step = Step.SEARCH_ROOM
                     return
