@@ -191,7 +191,11 @@ class KakaoController:
         self._set_search_text("")
 
     def reset_room_search(self) -> bool:
-        # 채팅방 열기 실패 복구를 위해 검색창 상태를 초기화한다.
+        # 채팅방 열기 실패 복구를 위해 검색창 상태를 수동 키 입력으로 초기화한다.
+        return self._focus_and_clear_search_box()
+
+    def force_reset_room_search(self) -> bool:
+        # 수동 키 입력 초기화 실패 시 WM_SETTEXT 기반 초기화를 백업으로 수행한다.
         return self._set_search_text("")
 
     @staticmethod
@@ -206,8 +210,22 @@ class KakaoController:
     def _clear_search_box() -> None:
         # 현재 포커스가 검색창인 경우 기존 검색어를 제거하기 위한 방어 루틴.
         for _ in range(20):
+            pyautogui.press("delete")
+            time.sleep(0.02)
             pyautogui.press("backspace")
             time.sleep(0.02)
+
+    def _focus_and_clear_search_box(self) -> bool:
+        # Ctrl+F로 검색창에 포커스를 맞춘 뒤 Delete/Backspace 반복으로 직접 비운다.
+        try:
+            pyautogui.hotkey("ctrl", "f")
+            time.sleep(0.2)
+            self._clear_search_box()
+            time.sleep(0.1)
+            return True
+        except Exception as exc:
+            log(f"검색창 수동 초기화 실패: {exc}")
+            return False
 
     @staticmethod
     def _set_search_text(text: str) -> bool:
