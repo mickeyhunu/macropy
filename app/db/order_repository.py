@@ -12,7 +12,7 @@ class OrderRepository:
     def claim_next_order(self) -> dict[str, Any] | None:
         # READY 상태 주문 1건을 락으로 선점한다.
         select_query = """
-        SELECT orderNo, storeNo, roomNo, sendMsg, waiterName
+        SELECT orderNo, storeNo, roomNo, senderName, sendMsg, waiterName
           FROM INFO_ORDER
          WHERE status = %s
            AND COALESCE(tryCount, 0) < %s
@@ -42,6 +42,7 @@ class OrderRepository:
                 "orderNo": row["orderNo"],
                 "storeNo": row["storeNo"],
                 "roomNo": row["roomNo"],
+                "senderName": row["senderName"],
                 "sendMsg": row["sendMsg"],
                 "waiterName": row["waiterName"],
             }
