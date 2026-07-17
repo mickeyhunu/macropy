@@ -47,6 +47,33 @@ class OrderRepository:
                 "waiterName": row["waiterName"],
             }
 
+    def expire_stale_orders(self) -> int:
+        """오래된 READY 주문은 발송 대상에서 제외한다.
+
+        MAX_ORDER_AGE_MINUTES가 0 이하이면 만료 처리를 비활성화한다.
+        createdAt 기준으로 오래된 주문을 FAIL 상태로 전환해 claim 대상에서 빼고,
+        다음 READY 주문이 있으면 즉시 처리될 수 있게 한다.
+        """
+        if settings.max_order_age_minutes <= 0:
+            return 0
+
+        query = """
+        UPDATE INFO_ORDER
+           SET status = %s,
+               lastTriedAt = NOW()
+         WHERE status = %s
+           AND createdAt < DATE_SUB(NOW(), INTERVAL %s MINUTE)
+        """
+        with get_connection() as conn:
+            cur = conn.cursor()
+            cur.execute(
+                query,
+                (settings.status_fail, settings.status_ready, settings.max_order_age_minutes),
+            )
+            affected = cur.rowcount
+            conn.commit()
+            return affected
+
     def mark_done(self, order_no: int) -> None:
         # 전송 완료 시 DONE으로 마킹.
         query = """
