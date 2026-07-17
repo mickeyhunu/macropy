@@ -38,6 +38,7 @@ class Settings:
 
     poll_interval_sec: float = float(os.getenv("POLL_INTERVAL_SEC", "1.5"))
     max_try_count: int = int(os.getenv("MAX_TRY_COUNT", "10"))
+    max_order_age_minutes: int = int(os.getenv("MAX_ORDER_AGE_MINUTES", "0"))
 
     status_ready: str = os.getenv("STATUS_READY", "READY")
     status_processing: str = os.getenv("STATUS_PROCESSING", "PROCESSING")

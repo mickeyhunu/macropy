@@ -9,6 +9,9 @@ class OrderService:
     def __init__(self, repo: OrderRepository | None = None):
         self.repo = repo or OrderRepository()
 
+    def expire_stale_jobs(self) -> int:
+        return self.repo.expire_stale_orders()
+
     def claim_job(self):
         return self.repo.claim_next_order()
 
