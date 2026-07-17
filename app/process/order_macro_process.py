@@ -111,6 +111,10 @@ class OrderMacroProcess:
             # 1) DB에서 처리할 주문을 선점(claim)한다.
             if self.stop_requested:
                 return
+            expired_count = self.service.expire_stale_jobs()
+            if expired_count:
+                log(f"[만료 처리] 오래된 READY 주문 {expired_count}건을 FAIL로 전환했습니다.")
+
             self.job = self.service.claim_job()
             if not self.job:
                 time.sleep(settings.poll_interval_sec)
